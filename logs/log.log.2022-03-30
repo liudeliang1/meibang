@@ -1,0 +1,68 @@
+2022-03-30 10:23:34,017 - [test_01_home.py-->line:30] - INFO: 正在请求地址http://web.meibangtech.com/clients/login
+2022-03-30 10:23:36,090 - [test_01_home.py-->line:30] - INFO: 正在请求地址http://web.meibangtech.com/clients/home/getRightData
+2022-03-30 10:23:36,443 - [test_01_home.py-->line:48] - INFO: 2:用例执行通过
+2022-03-30 10:25:05,564 - [test_01_home.py-->line:30] - INFO: 正在请求地址http://web.meibangtech.com/clients/login
+2022-03-30 10:25:07,426 - [test_01_home.py-->line:30] - INFO: 正在请求地址http://web.meibangtech.com/clients/home/getRightData
+2022-03-30 10:25:07,828 - [test_01_home.py-->line:43] - INFO: 2:用例执行未通过
+2022-03-30 10:25:07,828 - [test_01_home.py-->line:44] - ERROR: assert '100' != '100'
+ +  where '100' = str(100)
+Traceback (most recent call last):
+  File "E:\python_project\api_project_03\testcases\test_01_home.py", line 40, in test_home_task
+    assert str(code) != test_info["expected"]
+AssertionError: assert '100' != '100'
+ +  where '100' = str(100)
+2022-03-30 10:30:15,555 - [test_01_home.py-->line:30] - INFO: 正在请求地址http://web.meibangtech.com/clients/login
+2022-03-30 10:30:17,583 - [test_01_home.py-->line:30] - INFO: 正在请求地址http://web.meibangtech.com/clients/home/getRightData
+2022-03-30 10:30:17,990 - [test_01_home.py-->line:48] - INFO: 2:用例执行通过
+2022-03-30 10:30:17,992 - [test_01_home.py-->line:30] - INFO: 正在请求地址http://web.meibangtech.com/clients/home/getLeftData
+2022-03-30 10:30:18,336 - [test_01_home.py-->line:48] - INFO: 3:用例执行通过
+2022-03-30 10:35:18,483 - [test_01_home.py-->line:30] - INFO: 正在请求地址http://web.meibangtech.com/clients/login
+2022-03-30 10:35:20,337 - [test_01_home.py-->line:30] - INFO: 正在请求地址http://web.meibangtech.com/clients/home/getRightData
+2022-03-30 10:35:20,754 - [test_01_home.py-->line:48] - INFO: 获取项目列表:用例执行通过
+2022-03-30 10:35:20,756 - [test_01_home.py-->line:30] - INFO: 正在请求地址http://web.meibangtech.com/clients/home/getLeftData
+2022-03-30 10:35:21,244 - [test_01_home.py-->line:48] - INFO: 获取预约单列表:用例执行通过
+2022-03-30 10:37:02,936 - [test_01_home.py-->line:30] - INFO: 正在请求地址http://web.meibangtech.com/clients/login
+2022-03-30 10:37:04,960 - [test_01_home.py-->line:30] - INFO: 正在请求地址http://web.meibangtech.com/clients/home/getRightData
+2022-03-30 10:37:05,299 - [test_01_home.py-->line:48] - INFO: 【获取项目列表】:用例执行通过
+2022-03-30 10:37:05,301 - [test_01_home.py-->line:30] - INFO: 正在请求地址http://web.meibangtech.com/clients/home/getLeftData
+2022-03-30 10:37:05,655 - [test_01_home.py-->line:48] - INFO: 【获取预约单列表】:用例执行通过
+2022-03-30 10:39:54,177 - [test_01_home.py-->line:30] - INFO: 正在请求地址http://web.meibangtech.com/clients/login
+2022-03-30 10:39:55,973 - [test_01_home.py-->line:30] - INFO: 正在请求地址http://web.meibangtech.com/clients/home/getRightData
+2022-03-30 10:39:56,381 - [test_01_home.py-->line:48] - INFO: 【获取项目列表】:用例执行通过
+2022-03-30 10:39:56,382 - [test_01_home.py-->line:30] - INFO: 正在请求地址http://web.meibangtech.com/clients/home/getLeftData
+2022-03-30 10:39:56,666 - [test_01_home.py-->line:48] - INFO: 【获取预约单列表】:用例执行通过
+2022-03-30 10:42:43,770 - [test_01_home.py-->line:30] - INFO: 正在请求地址http://web.meibangtech.com/clients/login
+2022-03-30 10:42:46,337 - [test_01_home.py-->line:30] - INFO: 正在请求地址http://web.meibangtech.com/clients/home/getRightData
+2022-03-30 10:42:46,629 - [test_01_home.py-->line:48] - INFO: 【获取项目列表】:用例执行通过
+2022-03-30 10:42:46,631 - [test_01_home.py-->line:30] - INFO: 正在请求地址http://web.meibangtech.com/clients/home/getLeftData
+2022-03-30 10:42:47,006 - [test_01_home.py-->line:48] - INFO: 【获取预约单列表】:用例执行通过
+2022-03-30 14:01:14,337 - [test_01_home_excel.py-->line:35] - INFO: 正在请求地址http://web.meibangtech.com/clients/login
+2022-03-30 14:01:14,530 - [test_01_home_excel.py-->line:35] - INFO: 正在请求地址http://web.meibangtech.com/clients/home/getRightData
+2022-03-30 14:01:14,841 - [test_01_home_excel.py-->line:35] - INFO: 正在请求地址http://web.meibangtech.com/clients/home/getLeftData
+2022-03-30 14:03:44,708 - [test_01_home_excel.py-->line:36] - INFO: 正在请求地址http://web.meibangtech.com/clients/login
+2022-03-30 14:03:46,731 - [test_01_home_excel.py-->line:36] - INFO: 正在请求地址http://web.meibangtech.com/clients/home/getRightData
+2022-03-30 14:03:47,297 - [test_01_home_excel.py-->line:36] - INFO: 正在请求地址http://web.meibangtech.com/clients/home/getLeftData
+2022-03-30 14:04:21,271 - [test_01_home_excel.py-->line:36] - INFO: 正在请求地址http://web.meibangtech.com/clients/login
+2022-03-30 14:04:23,189 - [test_01_home_excel.py-->line:36] - INFO: 正在请求地址http://web.meibangtech.com/clients/home/getRightData
+2022-03-30 14:04:23,578 - [test_01_home_excel.py-->line:49] - INFO: 【获取右边菜单列表】:用例执行未通过
+2022-03-30 14:04:23,578 - [test_01_home_excel.py-->line:50] - ERROR: assert '100' == 100
+ +  where '100' = str(100)
+Traceback (most recent call last):
+  File "E:\python_project\api_project_03\testcases\test_01_home_excel.py", line 46, in test_home_task
+    assert str(code) == test_info["expected"]
+AssertionError: assert '100' == 100
+ +  where '100' = str(100)
+2022-03-30 14:04:23,701 - [test_01_home_excel.py-->line:36] - INFO: 正在请求地址http://web.meibangtech.com/clients/home/getLeftData
+2022-03-30 14:04:24,060 - [test_01_home_excel.py-->line:49] - INFO: 【获取左边菜单列表】:用例执行未通过
+2022-03-30 14:04:24,060 - [test_01_home_excel.py-->line:50] - ERROR: assert '100' == 100
+ +  where '100' = str(100)
+Traceback (most recent call last):
+  File "E:\python_project\api_project_03\testcases\test_01_home_excel.py", line 46, in test_home_task
+    assert str(code) == test_info["expected"]
+AssertionError: assert '100' == 100
+ +  where '100' = str(100)
+2022-03-30 14:05:29,976 - [test_01_home_excel.py-->line:36] - INFO: 正在请求地址http://web.meibangtech.com/clients/login
+2022-03-30 14:05:32,292 - [test_01_home_excel.py-->line:36] - INFO: 正在请求地址http://web.meibangtech.com/clients/home/getRightData
+2022-03-30 14:05:32,602 - [test_01_home_excel.py-->line:54] - INFO: 【获取右边菜单列表】:用例执行通过
+2022-03-30 14:05:32,604 - [test_01_home_excel.py-->line:36] - INFO: 正在请求地址http://web.meibangtech.com/clients/home/getLeftData
+2022-03-30 14:05:32,968 - [test_01_home_excel.py-->line:54] - INFO: 【获取左边菜单列表】:用例执行通过

@@ -1,0 +1,9 @@
+2022-04-07 15:06:14,518 - [test_api_01_comment.py-->line:30] - INFO: 正在请求地址http://clients-test.meibangtech.com/clients/login
+2022-04-07 15:06:17,508 - [test_api_01_comment.py-->line:30] - INFO: 正在请求地址http://clients-test.meibangtech.com/lianli-beauty-customer-api/treat-comment/list
+2022-04-07 15:06:17,645 - [test_api_01_comment.py-->line:30] - INFO: 正在请求地址http://clients-test.meibangtech.com/lianli-beauty-customer-api/treat-comment/list
+2022-04-07 15:09:45,329 - [test_api_01_comment.py-->line:30] - INFO: 正在请求地址http://clients-test.meibangtech.com/clients/login
+2022-04-07 15:09:47,022 - [test_api_01_comment.py-->line:30] - INFO: 正在请求地址http://clients-test.meibangtech.com/lianli-beauty-customer-api/treat-comment/list
+2022-04-07 15:09:47,159 - [test_api_01_comment.py-->line:30] - INFO: 正在请求地址http://clients-test.meibangtech.com/lianli-beauty-customer-api/treat-comment/list
+2022-04-07 15:10:59,522 - [test_api_01_comment.py-->line:30] - INFO: 正在请求地址http://clients-test.meibangtech.com/clients/login
+2022-04-07 15:11:01,160 - [test_api_01_comment.py-->line:30] - INFO: 正在请求地址http://clients-test.meibangtech.com/lianli-beauty-customer-api/treat-comment/list
+2022-04-07 15:11:01,295 - [test_api_01_comment.py-->line:30] - INFO: 正在请求地址http://clients-test.meibangtech.com/lianli-beauty-customer-api/treat-comment/list

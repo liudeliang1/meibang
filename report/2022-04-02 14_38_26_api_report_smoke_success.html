@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8"/>
+    <title>Test Report</title>
+    <link href="assets/style.css" rel="stylesheet" type="text/css"/></head>
+  <body onLoad="init()">
+    <script>/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+
+function toArray(iter) {
+    if (iter === null) {
+        return null;
+    }
+    return Array.prototype.slice.call(iter);
+}
+
+function find(selector, elem) { // eslint-disable-line no-redeclare
+    if (!elem) {
+        elem = document;
+    }
+    return elem.querySelector(selector);
+}
+
+function findAll(selector, elem) {
+    if (!elem) {
+        elem = document;
+    }
+    return toArray(elem.querySelectorAll(selector));
+}
+
+function sortColumn(elem) {
+    toggleSortStates(elem);
+    const colIndex = toArray(elem.parentNode.childNodes).indexOf(elem);
+    let key;
+    if (elem.classList.contains('result')) {
+        key = keyResult;
+    } else if (elem.classList.contains('links')) {
+        key = keyLink;
+    } else {
+        key = keyAlpha;
+    }
+    sortTable(elem, key(colIndex));
+}
+
+function showAllExtras() { // eslint-disable-line no-unused-vars
+    findAll('.col-result').forEach(showExtras);
+}
+
+function hideAllExtras() { // eslint-disable-line no-unused-vars
+    findAll('.col-result').forEach(hideExtras);
+}
+
+function showExtras(colresultElem) {
+    const extras = colresultElem.parentNode.nextElementSibling;
+    const expandcollapse = colresultElem.firstElementChild;
+    extras.classList.remove('collapsed');
+    expandcollapse.classList.remove('expander');
+    expandcollapse.classList.add('collapser');
+}
+
+function hideExtras(colresultElem) {
+    const extras = colresultElem.parentNode.nextElementSibling;
+    const expandcollapse = colresultElem.firstElementChild;
+    extras.classList.add('collapsed');
+    expandcollapse.classList.remove('collapser');
+    expandcollapse.classList.add('expander');
+}
+
+function showFilters() {
+    const filterItems = document.getElementsByClassName('filter');
+    for (let i = 0; i < filterItems.length; i++)
+        filterItems[i].hidden = false;
+}
+
+function addCollapse() {
+    // Add links for show/hide all
+    const resulttable = find('table#results-table');
+    const showhideall = document.createElement('p');
+    showhideall.innerHTML = '<a href="javascript:showAllExtras()">Show all details</a> / ' +
+                            '<a href="javascript:hideAllExtras()">Hide all details</a>';
+    resulttable.parentElement.insertBefore(showhideall, resulttable);
+
+    // Add show/hide link to each result
+    findAll('.col-result').forEach(function(elem) {
+        const collapsed = getQueryParameter('collapsed') || 'Passed';
+        const extras = elem.parentNode.nextElementSibling;
+        const expandcollapse = document.createElement('span');
+        if (extras.classList.contains('collapsed')) {
+            expandcollapse.classList.add('expander');
+        } else if (collapsed.includes(elem.innerHTML)) {
+            extras.classList.add('collapsed');
+            expandcollapse.classList.add('expander');
+        } else {
+            expandcollapse.classList.add('collapser');
+        }
+        elem.appendChild(expandcollapse);
+
+        elem.addEventListener('click', function(event) {
+            if (event.currentTarget.parentNode.nextElementSibling.classList.contains('collapsed')) {
+                showExtras(event.currentTarget);
+            } else {
+                hideExtras(event.currentTarget);
+            }
+        });
+    });
+}
+
+function getQueryParameter(name) {
+    const match = RegExp('[?&]' + name + '=([^&]*)').exec(window.location.search);
+    return match && decodeURIComponent(match[1].replace(/\+/g, ' '));
+}
+
+function init () { // eslint-disable-line no-unused-vars
+    resetSortHeaders();
+
+    addCollapse();
+
+    showFilters();
+
+    sortColumn(find('.initial-sort'));
+
+    findAll('.sortable').forEach(function(elem) {
+        elem.addEventListener('click',
+            function() {
+                sortColumn(elem);
+            }, false);
+    });
+}
+
+function sortTable(clicked, keyFunc) {
+    const rows = findAll('.results-table-row');
+    const reversed = !clicked.classList.contains('asc');
+    const sortedRows = sort(rows, keyFunc, reversed);
+    /* Whole table is removed here because browsers acts much slower
+     * when appending existing elements.
+     */
+    const thead = document.getElementById('results-table-head');
+    document.getElementById('results-table').remove();
+    const parent = document.createElement('table');
+    parent.id = 'results-table';
+    parent.appendChild(thead);
+    sortedRows.forEach(function(elem) {
+        parent.appendChild(elem);
+    });
+    document.getElementsByTagName('BODY')[0].appendChild(parent);
+}
+
+function sort(items, keyFunc, reversed) {
+    const sortArray = items.map(function(item, i) {
+        return [keyFunc(item), i];
+    });
+
+    sortArray.sort(function(a, b) {
+        const keyA = a[0];
+        const keyB = b[0];
+
+        if (keyA == keyB) return 0;
+
+        if (reversed) {
+            return keyA < keyB ? 1 : -1;
+        } else {
+            return keyA > keyB ? 1 : -1;
+        }
+    });
+
+    return sortArray.map(function(item) {
+        const index = item[1];
+        return items[index];
+    });
+}
+
+function keyAlpha(colIndex) {
+    return function(elem) {
+        return elem.childNodes[1].childNodes[colIndex].firstChild.data.toLowerCase();
+    };
+}
+
+function keyLink(colIndex) {
+    return function(elem) {
+        const dataCell = elem.childNodes[1].childNodes[colIndex].firstChild;
+        return dataCell == null ? '' : dataCell.innerText.toLowerCase();
+    };
+}
+
+function keyResult(colIndex) {
+    return function(elem) {
+        const strings = ['Error', 'Failed', 'Rerun', 'XFailed', 'XPassed',
+            'Skipped', 'Passed'];
+        return strings.indexOf(elem.childNodes[1].childNodes[colIndex].firstChild.data);
+    };
+}
+
+function resetSortHeaders() {
+    findAll('.sort-icon').forEach(function(elem) {
+        elem.parentNode.removeChild(elem);
+    });
+    findAll('.sortable').forEach(function(elem) {
+        const icon = document.createElement('div');
+        icon.className = 'sort-icon';
+        icon.textContent = 'vvv';
+        elem.insertBefore(icon, elem.firstChild);
+        elem.classList.remove('desc', 'active');
+        elem.classList.add('asc', 'inactive');
+    });
+}
+
+function toggleSortStates(elem) {
+    //if active, toggle between asc and desc
+    if (elem.classList.contains('active')) {
+        elem.classList.toggle('asc');
+        elem.classList.toggle('desc');
+    }
+
+    //if inactive, reset all other functions and add ascending active
+    if (elem.classList.contains('inactive')) {
+        resetSortHeaders();
+        elem.classList.remove('inactive');
+        elem.classList.add('active');
+    }
+}
+
+function isAllRowsHidden(value) {
+    return value.hidden == false;
+}
+
+function filterTable(elem) { // eslint-disable-line no-unused-vars
+    const outcomeAtt = 'data-test-result';
+    const outcome = elem.getAttribute(outcomeAtt);
+    const classOutcome = outcome + ' results-table-row';
+    const outcomeRows = document.getElementsByClassName(classOutcome);
+
+    for(let i = 0; i < outcomeRows.length; i++){
+        outcomeRows[i].hidden = !elem.checked;
+    }
+
+    const rows = findAll('.results-table-row').filter(isAllRowsHidden);
+    const allRowsHidden = rows.length == 0 ? true : false;
+    const notFoundMessage = document.getElementById('not-found-message');
+    notFoundMessage.hidden = !allRowsHidden;
+}
+</script>
+    <h1>2022-04-02 14_38_26_api_report_smoke_success.html</h1>
+    <p>Report generated on 02-Apr-2022 at 14:38:32 by <a href="https://pypi.python.org/pypi/pytest-html">pytest-html</a> v3.1.1</p>
+    <h2>Environment</h2>
+    <table id="environment">
+      <tr>
+        <td>Packages</td>
+        <td>{"pluggy": "1.0.0", "py": "1.11.0", "pytest": "7.1.1"}</td></tr>
+      <tr>
+        <td>Platform</td>
+        <td>Windows-10-10.0.19041-SP0</td></tr>
+      <tr>
+        <td>Plugins</td>
+        <td>{"html": "3.1.1", "metadata": "2.0.1"}</td></tr>
+      <tr>
+        <td>Python</td>
+        <td>3.8.5</td></tr></table>
+    <h2>Summary</h2>
+    <p>4 tests ran in 6.24 seconds. </p>
+    <p class="filter" hidden="true">(Un)check the boxes to filter the results.</p><input checked="true" class="filter" data-test-result="passed" hidden="true" name="filter_checkbox" onChange="filterTable(this)" type="checkbox"/><span class="passed">4 passed</span>, <input checked="true" class="filter" data-test-result="skipped" disabled="true" hidden="true" name="filter_checkbox" onChange="filterTable(this)" type="checkbox"/><span class="skipped">0 skipped</span>, <input checked="true" class="filter" data-test-result="failed" disabled="true" hidden="true" name="filter_checkbox" onChange="filterTable(this)" type="checkbox"/><span class="failed">0 failed</span>, <input checked="true" class="filter" data-test-result="error" disabled="true" hidden="true" name="filter_checkbox" onChange="filterTable(this)" type="checkbox"/><span class="error">0 errors</span>, <input checked="true" class="filter" data-test-result="xfailed" disabled="true" hidden="true" name="filter_checkbox" onChange="filterTable(this)" type="checkbox"/><span class="xfailed">0 expected failures</span>, <input checked="true" class="filter" data-test-result="xpassed" disabled="true" hidden="true" name="filter_checkbox" onChange="filterTable(this)" type="checkbox"/><span class="xpassed">0 unexpected passes</span>
+    <h2>Results</h2>
+    <table id="results-table">
+      <thead id="results-table-head">
+        <tr>
+          <th class="sortable result initial-sort" col="result">Result</th>
+          <th class="sortable" col="name">Test</th>
+          <th class="sortable" col="duration">Duration</th>
+          <th class="sortable links" col="links">Links</th></tr>
+        <tr hidden="true" id="not-found-message">
+          <th colspan="4">No results found. Try to check the filters</th></tr></thead>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">testcases/test_scene_01_add_order.py::TestOrderTask::test_login_task[test_info0]</td>
+          <td class="col-duration">2.24</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="log"> ------------------------------Captured stdout call------------------------------ <br/>&lt;Response [200]&gt;
+登录成功！
+<br/> ------------------------------Captured stderr call------------------------------ <br/>2022-04-02 14:38:26,802 - [test_scene_01_add_order.py--&gt;line:34] - INFO: 正在请求地址http://clients-test.meibangtech.com/clients/login
+<br/> -------------------------------Captured log call-------------------------------- <br/>INFO     my_log:test_scene_01_add_order.py:34 正在请求地址http://clients-test.meibangtech.com/clients/login<br/></div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">testcases/test_scene_01_add_order.py::TestOrderTask::test_add_task[test_info0]</td>
+          <td class="col-duration">0.26</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="log"> ------------------------------Captured stdout call------------------------------ <br/>{&#x27;stateCode&#x27;: 100, &#x27;message&#x27;: &#x27;添加预约信息成功&#x27;, &#x27;data&#x27;: {&#x27;custId&#x27;: &#x27;A001980993904&#x27;, &#x27;appDate&#x27;: 1648774800000, &#x27;id&#x27;: 55256}}
+<br/> ------------------------------Captured stderr call------------------------------ <br/>2022-04-02 14:38:29,048 - [test_scene_01_add_order.py--&gt;line:54] - INFO: 正在请求地址http://clients-test.meibangtech.com/clients/bookingInfo/createNewBooking
+2022-04-02 14:38:29,049 - [test_scene_01_add_order.py--&gt;line:56] - INFO: 正在请求报文{&#x27;status&#x27;: &#x27;4&#x27;, &#x27;saleType&#x27;: &#x27;3&#x27;, &#x27;source&#x27;: 4, &#x27;appDate&#x27;: 1648774800000, &#x27;custID&#x27;: &#x27;A001980993904&#x27;, &#x27;remark&#x27;: &#x27;&#x27;, &#x27;techIdArr&#x27;: [&#x27;A06000678&#x27;], &#x27;appTechIdArr&#x27;: [&#x27;&#x27;], &#x27;durnTime&#x27;: &#x27;&#x27;, &#x27;roomId&#x27;: &#x27;&#x27;, &#x27;appDeviceIdArr&#x27;: [&#x27;&#x27;], &#x27;isNeedTea&#x27;: &#x27;0&#x27;, &#x27;isNeedHair&#x27;: &#x27;0&#x27;, &#x27;isNeedPark&#x27;: &#x27;0&#x27;, &#x27;isLineUp&#x27;: &#x27;2&#x27;, &#x27;appointSourceCode&#x27;: &#x27;&#x27;}
+2022-04-02 14:38:29,313 - [test_scene_01_add_order.py--&gt;line:71] - INFO: 【scene】:用例执行通过
+<br/> -------------------------------Captured log call-------------------------------- <br/>INFO     my_log:test_scene_01_add_order.py:54 正在请求地址http://clients-test.meibangtech.com/clients/bookingInfo/createNewBooking
+INFO     my_log:test_scene_01_add_order.py:56 正在请求报文{&#x27;status&#x27;: &#x27;4&#x27;, &#x27;saleType&#x27;: &#x27;3&#x27;, &#x27;source&#x27;: 4, &#x27;appDate&#x27;: 1648774800000, &#x27;custID&#x27;: &#x27;A001980993904&#x27;, &#x27;remark&#x27;: &#x27;&#x27;, &#x27;techIdArr&#x27;: [&#x27;A06000678&#x27;], &#x27;appTechIdArr&#x27;: [&#x27;&#x27;], &#x27;durnTime&#x27;: &#x27;&#x27;, &#x27;roomId&#x27;: &#x27;&#x27;, &#x27;appDeviceIdArr&#x27;: [&#x27;&#x27;], &#x27;isNeedTea&#x27;: &#x27;0&#x27;, &#x27;isNeedHair&#x27;: &#x27;0&#x27;, &#x27;isNeedPark&#x27;: &#x27;0&#x27;, &#x27;isLineUp&#x27;: &#x27;2&#x27;, &#x27;appointSourceCode&#x27;: &#x27;&#x27;}
+INFO     my_log:test_scene_01_add_order.py:71 【scene】:用例执行通过<br/></div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">testcases/test_scene_01_add_order.py::TestOrderTask::test_assign_task[test_info0]</td>
+          <td class="col-duration">0.43</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="log"> ------------------------------Captured stdout call------------------------------ <br/>{&#x27;stateCode&#x27;: 100, &#x27;message&#x27;: &#x27;排单成功&#x27;, &#x27;data&#x27;: None}
+<br/> ------------------------------Captured stderr call------------------------------ <br/>2022-04-02 14:38:29,315 - [test_scene_01_add_order.py--&gt;line:90] - INFO: 正在请求地址http://clients-test.meibangtech.com/clients/bookingInfo/createNewBookingArrange
+2022-04-02 14:38:29,315 - [test_scene_01_add_order.py--&gt;line:91] - INFO: 正在请求报文{&#x27;jsonString&#x27;: &#x27;{&quot;appid&quot;:&quot;55256&quot;,&quot;consumeData&quot;:{&quot;remark&quot;:&quot;&quot;,&quot;platType&quot;:12,&quot;appointmentId&quot;:&quot;&quot;,&quot;custID&quot;:&quot;A001980993904&quot;,&quot;orderDate&quot;:&quot;2022-04-01 09:28:11&quot;,&quot;treatmentList&quot;:[],&quot;cardList&quot;:[],&quot;YQCardList&quot;:[],&quot;timeCardList&quot;:[],&quot;mealCardList&quot;:[],&quot;sendMessage&quot;:false},&quot;saleData&quot;:{&quot;customerId&quot;:&quot;A001980993904&quot;,&quot;custID&quot;:&quot;A001980993904&quot;,&quot;siteID&quot;:&quot;A00101&quot;,&quot;empID&quot;:&quot;000000000&quot;,&quot;spbill_create_ip&quot;:&quot;&quot;,&quot;openid&quot;:&quot;&quot;,&quot;list1&quot;:[],&quot;list2&quot;:[{&quot;pid&quot;:&quot;XM021&quot;,&quot;id&quot;:&quot;XM021&quot;,&quot;ProductID&quot;:&quot;XM021&quot;,&quot;couponData&quot;:{},&quot;timeCard&quot;:false,&quot;isYq&quot;:&quot;0&quot;,&quot;name&quot;:&quot;手真甲护理(基础)&quot;,&quot;number&quot;:&quot;1&quot;,&quot;price&quot;:&quot;28&quot;,&quot;discount&quot;:&quot;100&quot;,&quot;totalprice&quot;:&quot;28&quot;,&quot;arrears&quot;:&quot;0&quot;,&quot;largess&quot;:false,&quot;total&quot;:&quot;28&quot;,&quot;minPrice&quot;:&quot;21&quot;,&quot;maxPrice&quot;:null,&quot;ValidBalance&quot;:null,&quot;AccountID&quot;:&quot;&quot;,&quot;usePrice&quot;:null,&quot;packName&quot;:null,&quot;product_id_card&quot;:&quot;&quot;,&quot;ProductIDCopy&quot;:&quot;&quot;,&quot;empFormList&quot;:[{&quot;empID&quot;:&quot;A06000678&quot;,&quot;scale&quot;:&quot;100&quot;,&quot;saleHandlerType&quot;:&quot;0&quot;,&quot;empName&quot;:&quot;程路通-1&quot;,&quot;groupType&quot;:&quot;1&quot;}],&quot;maxDiscountPrice&quot;:&quot;28&quot;,&quot;packDetails&quot;:[],&quot;packArrears&quot;:0}],&quot;list3&quot;:[],&quot;list4&quot;:[],&quot;list5&quot;:[],&quot;salePayAccHistoryForm&quot;:{&quot;list1&quot;:[1,2,3],&quot;list2&quot;:[&quot;账上余额&quot;,&quot;会费&quot;,&quot;储值卡&quot;],&quot;list3&quot;:[],&quot;moneyPay&quot;:&quot;0&quot;,&quot;cardPay&quot;:0,&quot;taxPay&quot;:0},&quot;tbSalePayFormList&quot;:[],&quot;actPay&quot;:28,&quot;arrears&quot;:&quot;0.00&quot;,&quot;should&quot;:28,&quot;newList&quot;:[],&quot;orderDate&quot;:&quot;2022-04-01 09:28:11&quot;,&quot;remark&quot;:&quot;&quot;,&quot;platType&quot;:&quot;12&quot;,&quot;ydPay&quot;:false,&quot;cardItemParams&quot;:[],&quot;sendMessage&quot;:false},&quot;orderAppointDate&quot;:1648774800000}&#x27;, &#x27;appointedDate&#x27;: 1648774800000, &#x27;entityID&#x27;: &#x27;A00101&#x27;, &#x27;appid&#x27;: &#x27;55256&#x27;}
+2022-04-02 14:38:29,753 - [test_scene_01_add_order.py--&gt;line:106] - INFO: 【scene】:用例执行通过
+<br/> -------------------------------Captured log call-------------------------------- <br/>INFO     my_log:test_scene_01_add_order.py:90 正在请求地址http://clients-test.meibangtech.com/clients/bookingInfo/createNewBookingArrange
+INFO     my_log:test_scene_01_add_order.py:91 正在请求报文{&#x27;jsonString&#x27;: &#x27;{&quot;appid&quot;:&quot;55256&quot;,&quot;consumeData&quot;:{&quot;remark&quot;:&quot;&quot;,&quot;platType&quot;:12,&quot;appointmentId&quot;:&quot;&quot;,&quot;custID&quot;:&quot;A001980993904&quot;,&quot;orderDate&quot;:&quot;2022-04-01 09:28:11&quot;,&quot;treatmentList&quot;:[],&quot;cardList&quot;:[],&quot;YQCardList&quot;:[],&quot;timeCardList&quot;:[],&quot;mealCardList&quot;:[],&quot;sendMessage&quot;:false},&quot;saleData&quot;:{&quot;customerId&quot;:&quot;A001980993904&quot;,&quot;custID&quot;:&quot;A001980993904&quot;,&quot;siteID&quot;:&quot;A00101&quot;,&quot;empID&quot;:&quot;000000000&quot;,&quot;spbill_create_ip&quot;:&quot;&quot;,&quot;openid&quot;:&quot;&quot;,&quot;list1&quot;:[],&quot;list2&quot;:[{&quot;pid&quot;:&quot;XM021&quot;,&quot;id&quot;:&quot;XM021&quot;,&quot;ProductID&quot;:&quot;XM021&quot;,&quot;couponData&quot;:{},&quot;timeCard&quot;:false,&quot;isYq&quot;:&quot;0&quot;,&quot;name&quot;:&quot;手真甲护理(基础)&quot;,&quot;number&quot;:&quot;1&quot;,&quot;price&quot;:&quot;28&quot;,&quot;discount&quot;:&quot;100&quot;,&quot;totalprice&quot;:&quot;28&quot;,&quot;arrears&quot;:&quot;0&quot;,&quot;largess&quot;:false,&quot;total&quot;:&quot;28&quot;,&quot;minPrice&quot;:&quot;21&quot;,&quot;maxPrice&quot;:null,&quot;ValidBalance&quot;:null,&quot;AccountID&quot;:&quot;&quot;,&quot;usePrice&quot;:null,&quot;packName&quot;:null,&quot;product_id_card&quot;:&quot;&quot;,&quot;ProductIDCopy&quot;:&quot;&quot;,&quot;empFormList&quot;:[{&quot;empID&quot;:&quot;A06000678&quot;,&quot;scale&quot;:&quot;100&quot;,&quot;saleHandlerType&quot;:&quot;0&quot;,&quot;empName&quot;:&quot;程路通-1&quot;,&quot;groupType&quot;:&quot;1&quot;}],&quot;maxDiscountPrice&quot;:&quot;28&quot;,&quot;packDetails&quot;:[],&quot;packArrears&quot;:0}],&quot;list3&quot;:[],&quot;list4&quot;:[],&quot;list5&quot;:[],&quot;salePayAccHistoryForm&quot;:{&quot;list1&quot;:[1,2,3],&quot;list2&quot;:[&quot;账上余额&quot;,&quot;会费&quot;,&quot;储值卡&quot;],&quot;list3&quot;:[],&quot;moneyPay&quot;:&quot;0&quot;,&quot;cardPay&quot;:0,&quot;taxPay&quot;:0},&quot;tbSalePayFormList&quot;:[],&quot;actPay&quot;:28,&quot;arrears&quot;:&quot;0.00&quot;,&quot;should&quot;:28,&quot;newList&quot;:[],&quot;orderDate&quot;:&quot;2022-04-01 09:28:11&quot;,&quot;remark&quot;:&quot;&quot;,&quot;platType&quot;:&quot;12&quot;,&quot;ydPay&quot;:false,&quot;cardItemParams&quot;:[],&quot;sendMessage&quot;:false},&quot;orderAppointDate&quot;:1648774800000}&#x27;, &#x27;appointedDate&#x27;: 1648774800000, &#x27;entityID&#x27;: &#x27;A00101&#x27;, &#x27;appid&#x27;: &#x27;55256&#x27;}
+INFO     my_log:test_scene_01_add_order.py:106 【scene】:用例执行通过<br/></div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">testcases/test_scene_01_add_order.py::TestOrderTask::test_close_task[test_info0]</td>
+          <td class="col-duration">2.83</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="log"> ------------------------------Captured stdout call------------------------------ <br/>{&#x27;stateCode&#x27;: 100, &#x27;message&#x27;: &#x27;成功&#x27;, &#x27;data&#x27;: {&#x27;sale&#x27;: {&#x27;newGrade&#x27;: &#x27;0&#x27;, &#x27;billID&#x27;: &#x27;A00102000016287&#x27;, &#x27;templateResult&#x27;: &#x27;请关注公众号授权登录&#x27;}, &#x27;consume&#x27;: {&#x27;empID&#x27;: &#x27;000000000&#x27;, &#x27;billID&#x27;: &#x27;A00103000041182&#x27;, &#x27;entityID&#x27;: &#x27;A00103&#x27;, &#x27;templateResult&#x27;: &#x27;请关注公众号授权登录&#x27;, &#x27;orderDate&#x27;: 1648776491000}}}
+<br/> ------------------------------Captured stderr call------------------------------ <br/>2022-04-02 14:38:29,754 - [test_scene_01_add_order.py--&gt;line:120] - INFO: 正在请求地址http://clients-test.meibangtech.com/clients/treatSecond/saleAndConsume
+2022-04-02 14:38:29,755 - [test_scene_01_add_order.py--&gt;line:121] - INFO: 正在请求报文{&#x27;appid&#x27;: &#x27;55256&#x27;, &#x27;consumeData&#x27;: {&#x27;remark&#x27;: &#x27;&#x27;, &#x27;platType&#x27;: 12, &#x27;appointmentId&#x27;: &#x27;&#x27;, &#x27;custID&#x27;: &#x27;A001980993904&#x27;, &#x27;orderDate&#x27;: &#x27;2022-04-01 09:28:11&#x27;, &#x27;treatmentList&#x27;: [{&#x27;productID&#x27;: &#x27;XM021&#x27;, &#x27;accountID&#x27;: &#x27;&#x27;, &#x27;pckId&#x27;: &#x27;&#x27;, &#x27;amount&#x27;: &#x27;1&#x27;, &#x27;price&#x27;: &#x27;28&#x27;, &#x27;Largess&#x27;: &#x27;false&#x27;, &#x27;cardCash&#x27;: &#x27;28.00&#x27;, &#x27;ValidCount&#x27;: &#x27;1&#x27;, &#x27;handlers&#x27;: [{&#x27;empID&#x27;: &#x27;A00101763&#x27;, &#x27;scale&#x27;: 1, &#x27;isBeautician&#x27;: &#x27;1&#x27;, &#x27;empName&#x27;: &#x27;袁丽梅&#x27;, &#x27;groupType&#x27;: &#x27;2&#x27;}], &#x27;deviceArr&#x27;: [], &#x27;id&#x27;: &#x27;XM021&#x27;, &#x27;pckNum&#x27;: &#x27;&#x27;, &#x27;packNum&#x27;: &#x27;&#x27;, &#x27;Name&#x27;: &#x27;手真甲护理(基础)&#x27;, &#x27;rate&#x27;: 1, &#x27;roomId&#x27;: &#x27;16&#x27;, &#x27;roomIdName&#x27;: &#x27;&#x27;, &#x27;startServiceTime&#x27;: 1648774800000, &#x27;usedTime&#x27;: &#x27;&#x27;, &#x27;pId&#x27;: &#x27;XM021&#x27;, &#x27;packName&#x27;: &#x27;&#x27;, &#x27;roomName&#x27;: &#x27;翠1&#x27;, &#x27;product_id_card&#x27;: &#x27;null&#x27;}], &#x27;cardList&#x27;: [], &#x27;YQCardList&#x27;: [], &#x27;timeCardList&#x27;: [], &#x27;mealCardList&#x27;: [], &#x27;sendMessage&#x27;: &#x27;true&#x27;}, &#x27;saleData&#x27;: {&#x27;customerId&#x27;: &#x27;A001980993904&#x27;, &#x27;custID&#x27;: &#x27;A001980993904&#x27;, &#x27;siteID&#x27;: &#x27;A00102&#x27;, &#x27;empID&#x27;: &#x27;000000000&#x27;, &#x27;spbill_create_ip&#x27;: &#x27;&#x27;, &#x27;openid&#x27;: &#x27;&#x27;, &#x27;list1&#x27;: [], &#x27;list2&#x27;: [{&#x27;pid&#x27;: &#x27;XM021&#x27;, &#x27;id&#x27;: &#x27;XM021&#x27;, &#x27;ProductID&#x27;: &#x27;XM021&#x27;, &#x27;couponData&#x27;: {}, &#x27;timeCard&#x27;: &#x27;false&#x27;, &#x27;isYq&#x27;: &#x27;0&#x27;, &#x27;name&#x27;: &#x27;手真甲护理(基础)&#x27;, &#x27;number&#x27;: &#x27;1&#x27;, &#x27;price&#x27;: &#x27;28&#x27;, &#x27;discount&#x27;: &#x27;100&#x27;, &#x27;totalprice&#x27;: &#x27;28&#x27;, &#x27;arrears&#x27;: &#x27;0&#x27;, &#x27;largess&#x27;: &#x27;false&#x27;, &#x27;total&#x27;: &#x27;28&#x27;, &#x27;minPrice&#x27;: &#x27;21&#x27;, &#x27;maxPrice&#x27;: &#x27;null&#x27;, &#x27;ValidBalance&#x27;: &#x27;null&#x27;, &#x27;AccountID&#x27;: &#x27;&#x27;, &#x27;usePrice&#x27;: &#x27;null&#x27;, &#x27;packName&#x27;: &#x27;null&#x27;, &#x27;product_id_card&#x27;: &#x27;&#x27;, &#x27;ProductIDCopy&#x27;: &#x27;&#x27;, &#x27;empFormList&#x27;: [{&#x27;empID&#x27;: &#x27;A06000678&#x27;, &#x27;scale&#x27;: &#x27;100&#x27;, &#x27;saleHandlerType&#x27;: &#x27;0&#x27;, &#x27;empName&#x27;: &#x27;程路通-1&#x27;, &#x27;groupType&#x27;: &#x27;1&#x27;}], &#x27;maxDiscountPrice&#x27;: &#x27;28&#x27;, &#x27;packDetails&#x27;: [], &#x27;packArrears&#x27;: 0}], &#x27;list3&#x27;: [], &#x27;list4&#x27;: [], &#x27;list5&#x27;: [], &#x27;salePayAccHistoryForm&#x27;: {&#x27;list1&#x27;: [1, 2, 3], &#x27;list2&#x27;: [&#x27;账上余额&#x27;, &#x27;会费&#x27;, &#x27;储值卡&#x27;], &#x27;list3&#x27;: [], &#x27;moneyPay&#x27;: &#x27;0&#x27;, &#x27;cardPay&#x27;: 0, &#x27;taxPay&#x27;: 0}, &#x27;tbSalePayFormList&#x27;: [{&#x27;amount&#x27;: 28, &#x27;payMethod&#x27;: &#x27;WX&#x27;, &#x27;payMethodName&#x27;: &#x27;微信&#x27;}], &#x27;actPay&#x27;: 28, &#x27;arrears&#x27;: &#x27;0.00&#x27;, &#x27;should&#x27;: 28, &#x27;newList&#x27;: [], &#x27;orderDate&#x27;: &#x27;2022-04-01 09:28:11&#x27;, &#x27;remark&#x27;: &#x27;&#x27;, &#x27;platType&#x27;: &#x27;12&#x27;, &#x27;ydPay&#x27;: &#x27;false&#x27;, &#x27;cardItemParams&#x27;: [], &#x27;sendMessage&#x27;: &#x27;true&#x27;}, &#x27;cardDataForm&#x27;: {&#x27;appid&#x27;: &#x27;55256&#x27;, &#x27;consumeData&#x27;: {&#x27;remark&#x27;: &#x27;&#x27;, &#x27;platType&#x27;: 12, &#x27;appointmentId&#x27;: &#x27;&#x27;, &#x27;custID&#x27;: &#x27;A001980993904&#x27;, &#x27;orderDate&#x27;: &#x27;2022-04-01 09:28:11&#x27;, &#x27;treatmentList&#x27;: [], &#x27;cardList&#x27;: [], &#x27;YQCardList&#x27;: [], &#x27;timeCardList&#x27;: [], &#x27;mealCardList&#x27;: [], &#x27;sendMessage&#x27;: &#x27;true&#x27;}, &#x27;saleData&#x27;: {&#x27;customerId&#x27;: &#x27;A001980993904&#x27;, &#x27;custID&#x27;: &#x27;A001980993904&#x27;, &#x27;siteID&#x27;: &#x27;A00102&#x27;, &#x27;empID&#x27;: &#x27;000000000&#x27;, &#x27;spbill_create_ip&#x27;: &#x27;&#x27;, &#x27;openid&#x27;: &#x27;&#x27;, &#x27;list1&#x27;: [], &#x27;list2&#x27;: [], &#x27;list3&#x27;: [], &#x27;list4&#x27;: [], &#x27;list5&#x27;: [], &#x27;salePayAccHistoryForm&#x27;: {&#x27;list1&#x27;: [1, 2, 3], &#x27;list2&#x27;: [&#x27;账上余额&#x27;, &#x27;会费&#x27;, &#x27;储值卡&#x27;], &#x27;list3&#x27;: [], &#x27;moneyPay&#x27;: &#x27;0&#x27;, &#x27;cardPay&#x27;: &#x27;0.00&#x27;, &#x27;taxPay&#x27;: 0}, &#x27;tbSalePayFormList&#x27;: [{&#x27;amount&#x27;: 28, &#x27;payMethod&#x27;: &#x27;WX&#x27;, &#x27;payMethodName&#x27;: &#x27;微信&#x27;}], &#x27;actPay&#x27;: &#x27;0.00&#x27;, &#x27;arrears&#x27;: &#x27;0.00&#x27;, &#x27;should&#x27;: &#x27;0.00&#x27;, &#x27;newList&#x27;: [], &#x27;orderDate&#x27;: &#x27;2022-04-01 09:28:11&#x27;, &#x27;remark&#x27;: &#x27;&#x27;, &#x27;platType&#x27;: &#x27;12&#x27;, &#x27;ydPay&#x27;: &#x27;false&#x27;, &#x27;cardItemParams&#x27;: [], &#x27;sendMessage&#x27;: &#x27;true&#x27;}}}
+2022-04-02 14:38:32,592 - [test_scene_01_add_order.py--&gt;line:136] - INFO: 【scene】:用例执行通过
+<br/> -------------------------------Captured log call-------------------------------- <br/>INFO     my_log:test_scene_01_add_order.py:120 正在请求地址http://clients-test.meibangtech.com/clients/treatSecond/saleAndConsume
+INFO     my_log:test_scene_01_add_order.py:121 正在请求报文{&#x27;appid&#x27;: &#x27;55256&#x27;, &#x27;consumeData&#x27;: {&#x27;remark&#x27;: &#x27;&#x27;, &#x27;platType&#x27;: 12, &#x27;appointmentId&#x27;: &#x27;&#x27;, &#x27;custID&#x27;: &#x27;A001980993904&#x27;, &#x27;orderDate&#x27;: &#x27;2022-04-01 09:28:11&#x27;, &#x27;treatmentList&#x27;: [{&#x27;productID&#x27;: &#x27;XM021&#x27;, &#x27;accountID&#x27;: &#x27;&#x27;, &#x27;pckId&#x27;: &#x27;&#x27;, &#x27;amount&#x27;: &#x27;1&#x27;, &#x27;price&#x27;: &#x27;28&#x27;, &#x27;Largess&#x27;: &#x27;false&#x27;, &#x27;cardCash&#x27;: &#x27;28.00&#x27;, &#x27;ValidCount&#x27;: &#x27;1&#x27;, &#x27;handlers&#x27;: [{&#x27;empID&#x27;: &#x27;A00101763&#x27;, &#x27;scale&#x27;: 1, &#x27;isBeautician&#x27;: &#x27;1&#x27;, &#x27;empName&#x27;: &#x27;袁丽梅&#x27;, &#x27;groupType&#x27;: &#x27;2&#x27;}], &#x27;deviceArr&#x27;: [], &#x27;id&#x27;: &#x27;XM021&#x27;, &#x27;pckNum&#x27;: &#x27;&#x27;, &#x27;packNum&#x27;: &#x27;&#x27;, &#x27;Name&#x27;: &#x27;手真甲护理(基础)&#x27;, &#x27;rate&#x27;: 1, &#x27;roomId&#x27;: &#x27;16&#x27;, &#x27;roomIdName&#x27;: &#x27;&#x27;, &#x27;startServiceTime&#x27;: 1648774800000, &#x27;usedTime&#x27;: &#x27;&#x27;, &#x27;pId&#x27;: &#x27;XM021&#x27;, &#x27;packName&#x27;: &#x27;&#x27;, &#x27;roomName&#x27;: &#x27;翠1&#x27;, &#x27;product_id_card&#x27;: &#x27;null&#x27;}], &#x27;cardList&#x27;: [], &#x27;YQCardList&#x27;: [], &#x27;timeCardList&#x27;: [], &#x27;mealCardList&#x27;: [], &#x27;sendMessage&#x27;: &#x27;true&#x27;}, &#x27;saleData&#x27;: {&#x27;customerId&#x27;: &#x27;A001980993904&#x27;, &#x27;custID&#x27;: &#x27;A001980993904&#x27;, &#x27;siteID&#x27;: &#x27;A00102&#x27;, &#x27;empID&#x27;: &#x27;000000000&#x27;, &#x27;spbill_create_ip&#x27;: &#x27;&#x27;, &#x27;openid&#x27;: &#x27;&#x27;, &#x27;list1&#x27;: [], &#x27;list2&#x27;: [{&#x27;pid&#x27;: &#x27;XM021&#x27;, &#x27;id&#x27;: &#x27;XM021&#x27;, &#x27;ProductID&#x27;: &#x27;XM021&#x27;, &#x27;couponData&#x27;: {}, &#x27;timeCard&#x27;: &#x27;false&#x27;, &#x27;isYq&#x27;: &#x27;0&#x27;, &#x27;name&#x27;: &#x27;手真甲护理(基础)&#x27;, &#x27;number&#x27;: &#x27;1&#x27;, &#x27;price&#x27;: &#x27;28&#x27;, &#x27;discount&#x27;: &#x27;100&#x27;, &#x27;totalprice&#x27;: &#x27;28&#x27;, &#x27;arrears&#x27;: &#x27;0&#x27;, &#x27;largess&#x27;: &#x27;false&#x27;, &#x27;total&#x27;: &#x27;28&#x27;, &#x27;minPrice&#x27;: &#x27;21&#x27;, &#x27;maxPrice&#x27;: &#x27;null&#x27;, &#x27;ValidBalance&#x27;: &#x27;null&#x27;, &#x27;AccountID&#x27;: &#x27;&#x27;, &#x27;usePrice&#x27;: &#x27;null&#x27;, &#x27;packName&#x27;: &#x27;null&#x27;, &#x27;product_id_card&#x27;: &#x27;&#x27;, &#x27;ProductIDCopy&#x27;: &#x27;&#x27;, &#x27;empFormList&#x27;: [{&#x27;empID&#x27;: &#x27;A06000678&#x27;, &#x27;scale&#x27;: &#x27;100&#x27;, &#x27;saleHandlerType&#x27;: &#x27;0&#x27;, &#x27;empName&#x27;: &#x27;程路通-1&#x27;, &#x27;groupType&#x27;: &#x27;1&#x27;}], &#x27;maxDiscountPrice&#x27;: &#x27;28&#x27;, &#x27;packDetails&#x27;: [], &#x27;packArrears&#x27;: 0}], &#x27;list3&#x27;: [], &#x27;list4&#x27;: [], &#x27;list5&#x27;: [], &#x27;salePayAccHistoryForm&#x27;: {&#x27;list1&#x27;: [1, 2, 3], &#x27;list2&#x27;: [&#x27;账上余额&#x27;, &#x27;会费&#x27;, &#x27;储值卡&#x27;], &#x27;list3&#x27;: [], &#x27;moneyPay&#x27;: &#x27;0&#x27;, &#x27;cardPay&#x27;: 0, &#x27;taxPay&#x27;: 0}, &#x27;tbSalePayFormList&#x27;: [{&#x27;amount&#x27;: 28, &#x27;payMethod&#x27;: &#x27;WX&#x27;, &#x27;payMethodName&#x27;: &#x27;微信&#x27;}], &#x27;actPay&#x27;: 28, &#x27;arrears&#x27;: &#x27;0.00&#x27;, &#x27;should&#x27;: 28, &#x27;newList&#x27;: [], &#x27;orderDate&#x27;: &#x27;2022-04-01 09:28:11&#x27;, &#x27;remark&#x27;: &#x27;&#x27;, &#x27;platType&#x27;: &#x27;12&#x27;, &#x27;ydPay&#x27;: &#x27;false&#x27;, &#x27;cardItemParams&#x27;: [], &#x27;sendMessage&#x27;: &#x27;true&#x27;}, &#x27;cardDataForm&#x27;: {&#x27;appid&#x27;: &#x27;55256&#x27;, &#x27;consumeData&#x27;: {&#x27;remark&#x27;: &#x27;&#x27;, &#x27;platType&#x27;: 12, &#x27;appointmentId&#x27;: &#x27;&#x27;, &#x27;custID&#x27;: &#x27;A001980993904&#x27;, &#x27;orderDate&#x27;: &#x27;2022-04-01 09:28:11&#x27;, &#x27;treatmentList&#x27;: [], &#x27;cardList&#x27;: [], &#x27;YQCardList&#x27;: [], &#x27;timeCardList&#x27;: [], &#x27;mealCardList&#x27;: [], &#x27;sendMessage&#x27;: &#x27;true&#x27;}, &#x27;saleData&#x27;: {&#x27;customerId&#x27;: &#x27;A001980993904&#x27;, &#x27;custID&#x27;: &#x27;A001980993904&#x27;, &#x27;siteID&#x27;: &#x27;A00102&#x27;, &#x27;empID&#x27;: &#x27;000000000&#x27;, &#x27;spbill_create_ip&#x27;: &#x27;&#x27;, &#x27;openid&#x27;: &#x27;&#x27;, &#x27;list1&#x27;: [], &#x27;list2&#x27;: [], &#x27;list3&#x27;: [], &#x27;list4&#x27;: [], &#x27;list5&#x27;: [], &#x27;salePayAccHistoryForm&#x27;: {&#x27;list1&#x27;: [1, 2, 3], &#x27;list2&#x27;: [&#x27;账上余额&#x27;, &#x27;会费&#x27;, &#x27;储值卡&#x27;], &#x27;list3&#x27;: [], &#x27;moneyPay&#x27;: &#x27;0&#x27;, &#x27;cardPay&#x27;: &#x27;0.00&#x27;, &#x27;taxPay&#x27;: 0}, &#x27;tbSalePayFormList&#x27;: [{&#x27;amount&#x27;: 28, &#x27;payMethod&#x27;: &#x27;WX&#x27;, &#x27;payMethodName&#x27;: &#x27;微信&#x27;}], &#x27;actPay&#x27;: &#x27;0.00&#x27;, &#x27;arrears&#x27;: &#x27;0.00&#x27;, &#x27;should&#x27;: &#x27;0.00&#x27;, &#x27;newList&#x27;: [], &#x27;orderDate&#x27;: &#x27;2022-04-01 09:28:11&#x27;, &#x27;remark&#x27;: &#x27;&#x27;, &#x27;platType&#x27;: &#x27;12&#x27;, &#x27;ydPay&#x27;: &#x27;false&#x27;, &#x27;cardItemParams&#x27;: [], &#x27;sendMessage&#x27;: &#x27;true&#x27;}}}
+INFO     my_log:test_scene_01_add_order.py:136 【scene】:用例执行通过<br/></div></td></tr></tbody></table></body></html>
